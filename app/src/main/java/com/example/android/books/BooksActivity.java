@@ -1,12 +1,15 @@
 package com.example.android.books;
 
+import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.Loader;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -16,16 +19,21 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BooksActivity extends AppCompatActivity {
+public class BooksActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<List<Book>> {
 
-    /**
-     * Tag for log messages
-     */
+    /** Tag for log messages */
     private static final String LOG_TAG = BooksActivity.class.getSimpleName();
 
     /** URL to query the book information */
     private static final String GOOGLE_BOOK_REQUEST_URL =
             "https://www.googleapis.com/books/v1/volumes?q=";
+
+    /**
+     * Constant value for the book loader ID. We can choose any integer.
+     * This really only comes into play if you're using multiple loaders.
+     */
+    private static final int Book_LOADER_ID = 1;
 
     /** Create a constant from the {@link BookAdapter} */
     private BookAdapter mAdapter;
@@ -36,7 +44,7 @@ public class BooksActivity extends AppCompatActivity {
     /** Progress bar to show the progress */
     ProgressBar mProgressBar;
 
-    /** A string variable to store the query text from the home page  */
+    /** A string variable to store the query text from the home page */
     private String queryText;
 
     @Override
@@ -67,11 +75,11 @@ public class BooksActivity extends AppCompatActivity {
         // If there is a network connection, fetch data
         if (networkInfo != null && networkInfo.isConnected()) {
 
-            // Create a constant of the bookAsyncTask inner class
-            BookAsyncTask task = new BookAsyncTask();
+            // Get a reference to the LoaderManager, in order to interact with loaders.
+            LoaderManager loaderManager = getLoaderManager();
 
-            // execute the task
-            task.execute(GOOGLE_BOOK_REQUEST_URL + queryText);
+            // Initialize the loader.
+            loaderManager.initLoader(Book_LOADER_ID, null, this);
 
         } else {
             // Otherwise, display error
@@ -81,7 +89,6 @@ public class BooksActivity extends AppCompatActivity {
             // Update empty state with no connection error message
             mEmptyStateTextView.setText(R.string.no_internet_connection);
         }
-
 
 
         // Find a reference to the {@link ListView} in the layout
@@ -101,7 +108,7 @@ public class BooksActivity extends AppCompatActivity {
         bookListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Book itemClicked= (Book) adapterView.getItemAtPosition(i);
+                Book itemClicked = (Book) adapterView.getItemAtPosition(i);
                 Intent intent = new Intent(BooksActivity.this, BookDetailedInfo.class);
                 intent.putExtra("CLICKED_ITEM", itemClicked);
                 startActivity(intent);
@@ -109,43 +116,36 @@ public class BooksActivity extends AppCompatActivity {
             }
         });
 
-
-
-
-
     }
 
-    private class BookAsyncTask extends AsyncTask<String, Void, List<Book>>{
-        @Override
-        protected List<Book> doInBackground(String... urls) {
+    @Override
+    public Loader<List<Book>> onCreateLoader(int i, Bundle bundle) {
+        return new BookLoader(this, GOOGLE_BOOK_REQUEST_URL + queryText);
+    }
 
-            if (urls[0] == null){
-                return null;
-            }
-            // Perform the network request, parse the response, and extract a list of books.
-            List<Book> result = QueryUtils.fetchBookData(urls[0]);
-            return result;
-        }
+    @Override
+    public void onLoadFinished(Loader<List<Book>> loader, List<Book> books) {
+        // Hide the progress bar
+        mProgressBar.setVisibility(View.GONE);
 
-        @Override
-        protected void onPostExecute(List<Book> books) {
-            // Hide the progress bar
-            mProgressBar.setVisibility(View.GONE);
+        // Set empty state text to display "No books found."
+        mEmptyStateTextView.setText(R.string.no_books);
 
-            // Set empty state text to display "No books found."
-            mEmptyStateTextView.setText(R.string.no_books);
+        // Clear the adapter of previous book data
+        mAdapter.clear();
 
-            // Clear the adapter of previous book data
-            mAdapter.clear();
-
-            // if there is a valid list of {@link Book}s, then add them to the adapter's
-            // data set. This will trigger the ListView to update.
-            if (books != null && !books.isEmpty()){
-                mAdapter.addAll(books);
-            }
+        // if there is a valid list of {@link Book}s, then add them to the adapter's
+        // data set. This will trigger the ListView to update.
+        if (books != null && !books.isEmpty()) {
+            mAdapter.addAll(books);
         }
     }
 
+    @Override
+    public void onLoaderReset(Loader<List<Book>> loader) {
+        // Loader reset, so we can clear out our existing data.
+        mAdapter.clear();
+    }
 
 }
 

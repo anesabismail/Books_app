@@ -24,9 +24,7 @@ import java.util.List;
 
 public class QueryUtils {
 
-    /**
-     * Tag for log messages
-     */
+    /** Tag for log messages */
     private static final String LOG_TAG = QueryUtils.class.getSimpleName();
 
     /**

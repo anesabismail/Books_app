@@ -5,3 +5,9 @@ This app helps search for books using Google Book API, this a project on Android
 I hope you try it and give me your feedback, thank you.
 
 ![alt text](https://github.com/anesabismail/Books_app/blob/master/Screenshot_2017-07-22-22-03-03.png)
+
+![alt text](https://github.com/anesabismail/Books_app/blob/master/Screenshot_2017-07-22-22-03-25.png)
+
+![alt text](https://github.com/anesabismail/Books_app/blob/master/Screenshot_2017-07-22-22-03-35.png)
+
+![alt text](https://github.com/anesabismail/Books_app/blob/master/Screenshot_2017-07-22-22-07-18.png)
